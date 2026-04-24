@@ -1,17 +1,31 @@
 import { NextResponse } from 'next/server';
 
 export class ApiResponse {
-  static success(data: any, message = 'Success', status = 200) {
+  static success<T>(
+    data: T, 
+    message: string = 'Success', 
+    status: number = 200,
+    meta?: any
+  ): NextResponse {
     return NextResponse.json(
-      { success: true, message, data },
+      { 
+        success: true, 
+        message, 
+        data,
+        ...(meta && { meta })
+      },
       { status }
     );
   }
 
-  static error(message: string, status = 500, errors?: any) {
+  static error(message: string, status: number = 500, errors?: any): NextResponse {
     return NextResponse.json(
-      { success: false, message, errors },
+      { 
+        success: false, 
+        message,
+        ...(errors && { errors })
+      },
       { status }
     );
   }
-}
+}                                                                                                                               

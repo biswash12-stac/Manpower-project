@@ -15,13 +15,11 @@ export default function RootLayout({
   const isAdmin = pathname.startsWith("/admin");
 
   return (
-    <html lang="en">
-      <body className="bg-[#F1F5F9]/30">
+    <html lang="en" suppressHydrationWarning>
+      <body className="bg-gray-50" suppressHydrationWarning>  {/* ← Changed from bg-[#F1F5F9]/30 */}
         <AdminProvider>
           {!isAdmin && <Navbar />}
-          
           {children}
-          
           {!isAdmin && <Footer />}
         </AdminProvider>
       </body>

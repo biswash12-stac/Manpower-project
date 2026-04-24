@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  allowedDevOrigins: [
+    'localhost:3000',
+    '127.0.0.1:3000',
+    '*.ngrok-free.app',
+    '*.vercel.app',
+  ],
 };
 
 export default nextConfig;

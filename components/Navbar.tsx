@@ -52,7 +52,13 @@ const Navbar: React.FC = () => {
           
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <Image src={logo} alt="Gulf Empire Company" className="h-20 w-auto" />
+          <Image 
+  src={logo} 
+  alt="gulfEmpire-Logo" 
+  className="h-16 w-auto" 
+  loading="eager"
+  priority
+/>
           </Link>
 
           {/* Desktop Navigation */}

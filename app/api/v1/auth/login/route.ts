@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { connectDB } from '@/src/config/database';
-import Admin from '@/models/admin';
-import { generateAccessToken, generateRefreshToken } from '@/src/utils/jwt';
+import Admin from "@/src/models/admin/adminModle"
+import { generateAccessToken, generateRefreshToken } from '@/src/utils/jasonwebtoken';
 import { ApiResponse } from '@/src/utils/apiResponse';
 
 export async function POST(req: NextRequest) {

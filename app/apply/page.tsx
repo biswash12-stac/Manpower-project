@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import ApplicationPreview from "@/components/ApplicationPreview";
+// import ApplicationPreview from "@/components/ApplicationPreview";
 type Props = {
   data: any;
   photo: string | null;
@@ -63,34 +63,8 @@ export default function ApplyPage() {
     // Add your API call or submission logic here
   };
 
-  // const handleDownloadPDF = async () => {
-  //   const element = document.getElementById("pdf-content");
-  //   if (!element) {
-  //     alert("Preview not found!");
-  //     return;
-  //   }
 
-  //   const html2pdf = (await import("html2pdf.js")).default;
-
-  //   await html2pdf()
-  //     .set({
-  //       margin: 0.3,
-  //       filename: "application.pdf",
-  //       image: { type: "jpeg", quality: 1 },
-  //       html2canvas: {
-  //         scale: 2,
-  //         useCORS: true,
-  //         backgroundColor: "#ffffff",
-  //       },
-  //       jsPDF: {
-  //         unit: "in",
-  //         format: "a4",
-  //         orientation: "portrait",
-  //       },
-  //     })
-  //     .from(element)
-  //     .save();
-  // };
+ 
 
   const handleDownloadPDF = async () => {
     const element = document.getElementById("pdf-content");

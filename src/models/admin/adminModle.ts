@@ -1,10 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-
-/**
- * yo chai harek admin docs ko type yei hunu parxa so that typescript le detect garna sakos
- */
 export interface IAdmin extends mongoose.Document {
   name: string;
   email: string;
@@ -12,57 +8,70 @@ export interface IAdmin extends mongoose.Document {
   role: 'superadmin' | 'admin';
   lastLogin?: Date;
   isActive: boolean;
+  isDeleted: boolean;
+  deletedAt?: Date;
+  comparePassword(candidatePassword: string): Promise<boolean>;
   createdAt: Date;
   updatedAt: Date;
-  comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
-const AdminSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Name is required'],
-    trim: true,
+const AdminSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'Name is required'],
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: [true, 'Email is required'],
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: [/^\S+@\S+\.\S+$/, 'Please use a valid email address'],
+      index: true,
+    },
+    password: {
+      type: String,
+      required: [true, 'Password is required'],
+      minlength: [6, 'Password must be at least 6 characters'],
+      select: false,
+    },
+    role: {
+      type: String,
+      enum: ['superadmin', 'admin'],
+      default: 'admin',
+    },
+    lastLogin: {
+      type: Date,
+      default: null,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
-  email: {
-    type: String,
-    required: [true, 'Email is required'],
-    unique: true,
-    lowercase: true,
-    trim: true,
-    match: [/^\S+@\S+\.\S+$/, 'Please use a valid email address'],
-    index: true,
-  },
-  password: {
-    type: String,
-    required: [true, 'Password is required'],
-    minlength: [6, 'Password must be at least 6 characters'],
-    select: false, // Don't return password by default
-  },
-  role: {
-    type: String,
-    enum: ['superadmin', 'admin'],
-    default: 'admin',
-  },
-  lastLogin: {
-    type: Date,
-    default: null,
-  },
-  isActive: {
-    type: Boolean,
-    default: true,
-    index: true,
-  },
-}, {
-  timestamps: true,
-});
+  {
+    timestamps: true,
+  }
+);
 
-// Hash password before saving
-AdminSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return ;
+// Hash password before saving - NO 'next' parameter needed
+AdminSchema.pre('save', async function() {
+  if (!this.isModified('password')) return;
   
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
-  ;
 });
 
 // Compare password method
@@ -70,13 +79,18 @@ AdminSchema.methods.comparePassword = async function(candidatePassword: string):
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Exclude inactive admins by default
+// Soft delete filters - Simplified version
 AdminSchema.pre('find', function() {
-  this.where({ isActive: true });
+  this.where({ isDeleted: false });
 });
 
 AdminSchema.pre('findOne', function() {
-  this.where({ isActive: true });
+  this.where({ isDeleted: false });
+});
+
+// For findById (which uses findOne internally)
+AdminSchema.pre('findOne', function() {
+  this.where({ isDeleted: false });
 });
 
 export default mongoose.models.Admin || mongoose.model<IAdmin>('Admin', AdminSchema);

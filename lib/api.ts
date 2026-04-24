@@ -4,7 +4,6 @@ const API_BASE = '/api/v1';
 export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   const token = localStorage.getItem('accessToken');
   
-  // ✅ Fix: Properly type the headers
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
@@ -13,7 +12,6 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
   
-  // Merge with existing headers from options
   if (options.headers) {
     const existingHeaders = options.headers as Record<string, string>;
     Object.assign(headers, existingHeaders);
@@ -24,11 +22,18 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
     headers,
   });
   
-  const data = await response.json();
+  // ✅ Fix: Check if response has content before parsing JSON
+  const contentType = response.headers.get('content-type');
+  let data = null;
+  
+  if (contentType && contentType.includes('application/json')) {
+    data = await response.json();
+  }
   
   if (!response.ok) {
-    if (response.status === 401) {
-      // Token expired - try to refresh
+    const isLoginEndpoint = endpoint === '/auth/login';
+    
+    if (response.status === 401 && !isLoginEndpoint) {
       const refreshed = await refreshToken();
       if (refreshed) {
         return apiFetch(endpoint, options);
@@ -40,7 +45,7 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
         throw new Error('Session expired');
       }
     }
-    throw new Error(data.message || 'API request failed');
+    throw new Error(data?.message || `API request failed: ${response.status}`);
   }
   
   return data;
@@ -71,7 +76,6 @@ async function refreshToken(): Promise<boolean> {
   return false;
 }
 
-// Optional: Add typed methods for common operations
 export const api = {
   get: <T = any>(endpoint: string) => 
     apiFetch(endpoint, { method: 'GET' }) as Promise<T>,
