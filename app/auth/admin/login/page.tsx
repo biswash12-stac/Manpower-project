@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";  // ← Add this import
 import { motion } from "framer-motion";
 import { Lock, Mail, Eye, EyeOff, Building2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -22,7 +23,6 @@ export default function AdminLoginPage() {
 
   const { login, isAuthenticated } = useAdmin();
 
-  // ✅ Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       router.push("/admin/dashboard");
@@ -32,7 +32,6 @@ export default function AdminLoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation
     if (!email || !password) {
       toast.error("Missing Fields", {
         description: "Please enter both email and password.",
@@ -43,14 +42,12 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     try {
-      // ✅ Call the real login API via AdminContext
       const success = await login(email, password);
 
       if (success) {
         toast.success("Welcome back!", {
           description: "Redirecting to dashboard...",
         });
-        // Router push happens automatically via useEffect when isAuthenticated changes
       } else {
         toast.error("Authentication Failed", {
           description: "Invalid email or password. Please try again.",
@@ -138,6 +135,16 @@ export default function AdminLoginPage() {
               </div>
             </div>
 
+            {/* ✅ Forgot Password Link - ADD THIS */}
+            <div className="text-right">
+              <Link 
+                href="/auth/forget-password"
+                className="text-xs text-[#7E86B5] hover:text-[#D4AF37] transition-colors"
+              >
+                Forgot Password?
+              </Link>
+            </div>
+
             {/* Submit Button */}
             <Button 
               type="submit" 
@@ -158,11 +165,11 @@ export default function AdminLoginPage() {
             </Button>
           </form>
 
-          {/* Demo Credentials (Updated to real credentials) */}
+          {/* Demo Credentials */}
           <div className="mt-6 text-xs sm:text-sm text-center text-muted-foreground">
             <p className="text-[#7E86B5]">Demo Credentials:</p>
-            <p className="text-[#7E86B5] text-xs sm:text-sm">Email: admin@gulfempire.com</p>
-            <p className="text-[#7E86B5] text-xs sm:text-sm">Password: Admin123!</p>
+            <p className="text-[#7E86B5] text-xs sm:text-sm">Email: gulfEmpire1234@gmail.com</p>
+            <p className="text-[#7E86B5] text-xs sm:text-sm">Password: gulfempireadmin1234@</p>
           </div>
 
           {/* Back to Website */}

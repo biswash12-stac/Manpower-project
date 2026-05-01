@@ -19,6 +19,7 @@ const nextConfig: NextConfig = {
     '*.ngrok-free.app',
     '*.vercel.app',
   ],
+  
 };
 
 export default nextConfig;

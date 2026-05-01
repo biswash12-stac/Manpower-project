@@ -11,7 +11,7 @@ export async function GET(
   try {
     await connectDB();
     
-    const { id } = await  params;
+    const { id } =   params;
     
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return ApiResponse.error('Invalid job ID', 400);

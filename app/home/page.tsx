@@ -265,7 +265,7 @@ export default function HomePage() {
             </div>
 
             <Link
-              href={`/apply/${job.title.toLowerCase().replace(/\s+/g, "-")}`}
+              href="/jobs"
             >
               <Button>Apply</Button>
             </Link>

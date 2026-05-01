@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
-import { ApplicationService } from '@/src/services/applicationSevice';
+import mongoose from 'mongoose';
+import { ApplicationService } from '@/src/services/applicationService';
 import { getAuthUser } from '@/src/middleware/auth.middleware';
 import { ApiResponse } from '@/src/utils/apiResponse';
 import { strictRateLimit } from '@/src/middleware/ratelimitMIddleware';
@@ -12,15 +13,22 @@ export async function POST(req: NextRequest) {
     if (rateLimitResult) return rateLimitResult;
     
     const body = await req.json();
+    console.log("📝 Received application:", JSON.stringify(body, null, 2));
+    
+    // ✅ Validate jobId is a valid MongoDB ObjectId
+    if (!body.jobId || !mongoose.Types.ObjectId.isValid(body.jobId)) {
+      return ApiResponse.error('Invalid job ID. Please apply from the jobs page.', 400);
+    }
     
     // Validate required fields
     const required = [
-      'jobId', 'firstName', 'lastName', 'email', 'phone',
-      'country', 'position', 'experience', 'coverLetter'
+      'firstName', 'lastName', 'email', 'phone',
+      'country', 'position', 'coverLetter'
     ];
     
     for (const field of required) {
       if (!body[field]) {
+        console.log(`❌ Missing field: ${field}`);
         return ApiResponse.error(`${field} is required`, 400);
       }
     }
@@ -31,17 +39,26 @@ export async function POST(req: NextRequest) {
       return ApiResponse.error('Please provide a valid email address', 400);
     }
     
-    // Validate experience is a number
-    if (isNaN(parseInt(body.experience))) {
-      return ApiResponse.error('Experience must be a number', 400);
+    // Validate experience only for non-freshers
+    if (!body.isFresher) {
+      if (!body.experience && body.experience !== 0) {
+        return ApiResponse.error('Years of experience is required for experienced candidates', 400);
+      }
+      if (body.experience && parseInt(body.experience) < 0) {
+        return ApiResponse.error('Experience cannot be negative', 400);
+      }
     }
     
+    console.log("✅ Validation passed, calling ApplicationService.submit");
+    
     const application = await ApplicationService.submit(body);
+    
+    console.log("✅ Application created:", application._id);
     
     return ApiResponse.success(application, 'Application submitted successfully', 201);
     
   } catch (error: any) {
-    console.error('Submit application error:', error);
+    console.error('❌ Submit application error:', error);
     
     if (error.message === 'You have already applied for this position') {
       return ApiResponse.error(error.message, 400);
@@ -50,7 +67,7 @@ export async function POST(req: NextRequest) {
       return ApiResponse.error(error.message, 404);
     }
     
-    return ApiResponse.error('Failed to submit application', 500);
+    return ApiResponse.error(error.message || 'Failed to submit application', 500);
   }
 }
 

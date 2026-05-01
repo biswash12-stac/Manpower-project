@@ -162,17 +162,13 @@ export default function HomePage() {
             <h3 className="py-5">Connecting skilled professionals with leading companies across Kuwait, UAE, Saudi Arabia, and Qatar.</h3>
 
             <div className="flex gap-4 flex-wrap">
-              <Link href="/contact">
-                <Button className="bg-[#D4AF37] text-black hover:bg-gray-200">
-                  Hire Talent
-                </Button>
-              </Link>
+             
 
-              <Link href="/apply">
+              <Link href="/jobs">
                 <Button
                   size="lg"
-                  variant="outline"
-                  className="border-2 border-white text-black bg-white hover:text-[white] w-full sm:w-auto"
+                  // variant="outline"
+                  className="border-2 border-none text-white bg-blue-500 w-full sm:w-auto rounded"
                 >
                   Find Your Job
                 </Button>
@@ -182,7 +178,7 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-2 border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-white w-full sm:w-auto bg-white/10 backdrop-blur-sm"
+                  className="border-2 border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-white w-full sm:w-auto bg-blue-200/10 backdrop-blur-sm"
                 >
                   <LogIn className="mr-2 w-5 h-5" />
                   Login
@@ -261,7 +257,7 @@ export default function HomePage() {
 
           <div className="text-center mt-10">
             <Link href="/services">
-              <Button className="bg-[#152E6A] hover:bg-blue-700 text-white">
+              <Button className="bg-[#152E6A] hover:bg-blue-700 text-white rounded">
                 View All Services
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
@@ -328,7 +324,7 @@ export default function HomePage() {
             </div>
 
             <Link href="/jobs">
-              <Button className="bg-black text-white hover:bg-gray-800">
+              <Button className="bg-blue-600 rounded-md text-white hover:bg-gray-800">
                 Browse All
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
@@ -372,7 +368,7 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  <Link href={`/apply/${getJobSlug(job.title)}`}>
+                  <Link href={`/apply/${job._id}`}>
                     <Button className="rounded-full px-6 bg-blue-600 text-white hover:bg-blue-700">
                       Apply
                     </Button>

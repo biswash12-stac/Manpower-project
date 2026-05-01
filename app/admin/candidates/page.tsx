@@ -48,7 +48,7 @@ export default function AdminCandidatesPage() {
       {/* HEADER */}
       <div>
         <h1 className="text-3xl font-bold text-[#0A2463]">
-          Candidates Database
+          Candidates List
         </h1>
         <p className="text-[#64748B]">
           Manage candidate profiles
@@ -97,7 +97,7 @@ export default function AdminCandidatesPage() {
                   </p>
                 </div>
 
-                <Button variant="ghost" size="sm">
+                <Button className="bg-[#0a2463] hover:bg-[#0a2463]/80 rounded text-white" size="sm">
                   <Eye className="w-4 h-4" />
                 </Button>
               </motion.div>

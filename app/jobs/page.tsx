@@ -62,6 +62,9 @@ export default function JobsPage() {
     }
   };
 
+  const getJobSlug = (title: string) => {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+};
   // Format date
   const getPostedDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -244,16 +247,16 @@ export default function JobsPage() {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex flex-col gap-2 lg:w-auto">
+                      <div className="flex flex-col gap-2 lg:w-auto shadow-md">
                         <Link href={`/apply/${job._id}`}>
-                          <Button className="w-full bg-[#1A326D] hover:bg-[#1A326D]/90">
+                          <Button className="w-full bg-[#1A326D] hover:bg-[#1A326D]/90 rounded">
                             Apply Now
                           </Button>
                         </Link>
 
                         <Button
-                          variant="outline"
-                          className="w-full border-[#1A326D] text-[#1A326D] hover:bg-[#1A326D]/5 bg-white"
+                          // variant="outline"
+                          className="w-full border-[#1A326D] text-white hover:bg-gray-800 rounded"
                         >
                           Save Job
                         </Button>

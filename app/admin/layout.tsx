@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import Link from "next/link";
@@ -18,6 +16,8 @@ import {
   Bell,
   Search,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -32,26 +32,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleLogout = () => {
     logout();
-    router.push("/admin/login");
+    router.push("/auth/admin/login");
   };
 
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard", badge: null },
-    { icon: Briefcase, label: "Jobs", path: "/admin/jobs", badge: "6" },
-    { icon: FileText, label: "Applications", path: "/admin/applications", badge: "6" },
-    { icon: MessageSquare, label: "Contacts", path: "/admin/contacts", badge: "4" },
+    { icon: Briefcase, label: "Jobs", path: "/admin/jobs", badge: null },
+    { icon: FileText, label: "Applications", path: "/admin/applications", badge: null },
+    { icon: MessageSquare, label: "Contacts", path: "/admin/contacts", badge: null },
     { icon: Users, label: "Candidates", path: "/admin/candidates", badge: null },
     { icon: Settings, label: "Settings", path: "/admin/settings", badge: null },
   ];
 
   return (
     <div className="min-h-screen bg-[#F1F5F9] overflow-x-hidden">
-      {/* Top Navigation */}
-      <header className="bg-white border-b border-border sticky top-0 z-40 shadow-sm">
-        <div className="flex items-center justify-between px-4 lg:px-6 h-16">
+      {/* Top Navigation - Fixed */}
+      <header className="bg-white border-b border-border fixed top-0 left-0 right-0 z-40 shadow-sm h-16">
+        <div className="flex items-center justify-between px-4 lg:px-6 h-full">
 
           {/* Left */}
           <div className="flex items-center gap-4">
@@ -88,7 +89,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Right */}
           <div className="flex items-center gap-3">
-
             <button className="relative p-2 hover:bg-[#F1F5F9] rounded-lg">
               <Bell className="w-5 h-5 text-[#64748B]" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
@@ -100,12 +100,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 className="flex items-center gap-3 p-2 hover:bg-[#F1F5F9] rounded-lg"
               >
                 <div className="hidden sm:block text-right">
-                  <p className="text-sm font-medium text-[#0A2463]">{adminUser?.name}</p>
-                  <p className="text-xs text-[#64748B]">Administrator</p>
+                  <p className="text-sm font-medium text-[#0A2463]">{adminUser?.name || "Admin"}</p>
+                  <p className="text-xs text-[#64748B]">{adminUser?.role === "superadmin" ? "Super Admin" : "Administrator"}</p>
                 </div>
 
                 <div className="w-10 h-10 bg-[#0A2463] text-white rounded-full flex items-center justify-center font-semibold">
-                  {adminUser?.name?.charAt(0)}
+                  {adminUser?.name?.charAt(0) || "A"}
                 </div>
 
                 <ChevronDown className="w-4 h-4 hidden sm:block" />
@@ -117,20 +117,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     className="fixed inset-0 z-40"
                     onClick={() => setShowUserMenu(false)}
                   />
-
                   <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border z-50 p-2">
                     <div className="px-3 py-2 border-b mb-2">
-                      <p className="font-medium text-[#0A2463]">{adminUser?.name}</p>
-                      <p className="text-sm text-[#64748B]">
-                        {adminUser?.email}
-                      </p>
+                      <p className="font-medium text-[#0A2463]">{adminUser?.name || "Admin"}</p>
+                      <p className="text-sm text-[#64748B]">{adminUser?.email}</p>
                     </div>
-
-                    <button className="w-full text-left px-3 py-2 hover:bg-[#F1F5F9] rounded-md text-sm flex items-center gap-2 text-[#0A2463]">
-                      <Settings className="w-4 h-4" />
-                      Account Settings
-                    </button>
-
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-3 py-2 hover:bg-red-50 text-red-600 rounded-md text-sm flex items-center gap-2 mt-1"
@@ -146,18 +137,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </header>
 
-      <div className="flex">
-
-        {/* Sidebar */}
+      <div className="flex pt-16">
+        {/* Sidebar - Fixed */}
         <aside
-          className={`fixed lg:sticky top-16 left-0 h-[calc(100vh-4rem)] bg-white border-r w-72 transition-transform z-30 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-            }`}
+          className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white border-r transition-all duration-300 z-30 flex flex-col ${
+            isCollapsed ? 'w-20' : 'w-72'
+          } ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
         >
-          <nav className="p-4 space-y-1">
-            <div className="px-3 py-2 mb-2">
-              <p className="text-xs font-semibold text-[#64748B] uppercase">
-                Main Menu
-              </p>
+          {/* Collapse Button */}
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="absolute -right-3 top-6 bg-white rounded-full p-1 shadow-md text-[#0A2463] hover:bg-gray-100 transition z-40 hidden lg:block"
+          >
+            {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </button>
+
+          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+            <div className={`px-3 py-2 mb-2 ${isCollapsed ? 'text-center' : ''}`}>
+              {!isCollapsed && (
+                <p className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
+                  Main Menu
+                </p>
+              )}
             </div>
 
             {menuItems.map((item) => {
@@ -169,17 +170,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   key={item.path}
                   href={item.path}
                   onClick={() => setIsSidebarOpen(false)}
-                  className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg ${isActive
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                    isActive
                       ? "bg-[#0A2463] text-white"
                       : "hover:bg-[#F1F5F9] text-[#7E86B5]"
-                    }`}
+                  } ${isCollapsed ? 'justify-center' : ''}`}
+                  title={isCollapsed ? item.label : ""}
                 >
-                  <div className="flex items-center gap-3">
-                    <Icon className="w-5 h-5" />
-                    <span className="font-medium">{item.label}</span>
-                  </div>
-
-                  {item.badge && (
+                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  {!isCollapsed && <span className="font-medium flex-1">{item.label}</span>}
+                  {!isCollapsed && item.badge && (
                     <Badge
                       className={
                         isActive
@@ -195,26 +195,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             })}
           </nav>
 
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-[#7E86B5]/30">
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-              <div className="w-10 h-10 bg-[#0A2463] text-white rounded-lg flex items-center justify-center">
+          {/* Footer */}
+          <div className={`p-4 border-t bg-gray-50 ${isCollapsed ? 'text-center' : ''}`}>
+            <div className={`flex items-center gap-3 p-3 bg-white rounded-lg border ${isCollapsed ? 'justify-center' : ''}`}>
+              <div className="w-8 h-8 bg-[#0A2463] text-white rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0">
                 GE
               </div>
-              <div>
-                <p className="text-sm font-medium text-[#0A2463]">Gulf Empire</p>
-                <p className="text-xs text-[#64748B]">Admin System</p>
-              </div>
+              {!isCollapsed && (
+                <div>
+                  <p className="text-xs font-medium text-[#0A2463]">Gulf Empire</p>
+                  <p className="text-[10px] text-[#64748B]">Admin System</p>
+                </div>
+              )}
             </div>
           </div>
         </aside>
 
-        {/* MAIN CONTENT (replaces Outlet) */}
-        <main className="flex-1 min-w-0 p-4 lg:p-8 min-h-[calc(100vh-4rem)]">
+        {/* Main Content - with margin for fixed sidebar */}
+        <main className={`flex-1 min-w-0 p-4 lg:p-8 transition-all duration-300 ${
+          isCollapsed ? 'lg:ml-20' : 'lg:ml-72'
+        }`}>
           {children}
         </main>
       </div>
 
-      {/* Overlay */}
+      {/* Mobile Overlay */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-20 lg:hidden"

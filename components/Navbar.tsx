@@ -7,7 +7,6 @@ import Image from "next/image";
 import { Menu, X, ChevronDown, Globe } from "lucide-react";
 import { Button } from "./ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-
 // 👉 Move logo to /public/images/logo.png
 import logo from "@/public/images/logo.png";
 
@@ -142,7 +141,7 @@ const Navbar: React.FC = () => {
               <span className="text-sm">EN</span>
             </button>
 
-            <Link href="/apply">
+            <Link href={`/jobs`}>
               <Button className="bg-amber-500 hover:bg-amber-600 text-white">
                 Apply Now
               </Button>
@@ -152,7 +151,7 @@ const Navbar: React.FC = () => {
           {/* Mobile Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden p-2"
+            className="lg:hidden p-2 bg-slate-600"
           >
             {isMobileMenuOpen ? (
               <X className="w-6 h-6" />
@@ -170,7 +169,7 @@ const Navbar: React.FC = () => {
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="lg:hidden overflow-hidden"
+              className="lg:hidden overflow-hidden  "
             >
               <nav className="flex flex-col gap-4 pt-6 pb-4">
                 
@@ -215,7 +214,7 @@ const Navbar: React.FC = () => {
                   </button>
 
                   <Link href="/apply" className="flex-1">
-                    <Button className="w-full bg-[#D4AF37] text-white">
+                    <Button className="w-full bg-[#D4AF37] text-white ">
                       Apply Now
                     </Button>
                   </Link>
