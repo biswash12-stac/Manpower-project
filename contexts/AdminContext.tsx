@@ -1,4 +1,4 @@
-// contexts/AdminContext.tsx (updated)
+// contexts/AdminContext.tsx
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
@@ -18,6 +18,7 @@ interface AdminContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -39,11 +40,15 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      // Use the api client
       const result = await api.get("/auth/me");
-      if (result.success) {
-        setAdminUser(result.data);
+      if (result && result.success) {
+        const userData = result.data || result;
+        setAdminUser(userData);
         setIsAuthenticated(true);
+      } else {
+        // Token might be invalid
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
       }
     } catch (error) {
       console.error("Auth check failed:", error);
@@ -56,18 +61,32 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      console.log("Attempting login...");
       const result = await api.post("/auth/login", { email, password });
+      console.log("Login response:", result);
       
-      if (result.success) {
-        localStorage.setItem("accessToken", result.data.tokens.accessToken);
-        localStorage.setItem("refreshToken", result.data.tokens.refreshToken);
-        setAdminUser(result.data.user);
-        setIsAuthenticated(true);
-        return true;
+      // Handle response structure
+      if (result && result.success === true) {
+        const responseData = result.data;
+        
+        // Extract tokens and user
+        const accessToken = responseData?.tokens?.accessToken;
+        const refreshToken = responseData?.tokens?.refreshToken;
+        const user = responseData?.user;
+        
+        if (accessToken && user) {
+          localStorage.setItem("accessToken", accessToken);
+          localStorage.setItem("refreshToken", refreshToken);
+          setAdminUser(user);
+          setIsAuthenticated(true);
+          return true;
+        }
       }
+      
+      console.error("Invalid login response structure:", result);
       return false;
-    } catch (error) {
-      console.error("Login error:", error);
+    } catch (error: any) {
+      console.error("Login error details:", error);
       return false;
     }
   };
@@ -89,8 +108,28 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     setIsAuthenticated(false);
   };
 
+  const refreshUser = async () => {
+    try {
+      const result = await api.get("/auth/me");
+      if (result && result.success) {
+        const userData = result.data || result;
+        setAdminUser(userData);
+        setIsAuthenticated(true);
+      }
+    } catch (error) {
+      console.error("Failed to refresh user:", error);
+    }
+  };
+
   return (
-    <AdminContext.Provider value={{ isAuthenticated, adminUser, isLoading, login, logout }}>
+    <AdminContext.Provider value={{ 
+      isAuthenticated, 
+      adminUser, 
+      isLoading, 
+      login, 
+      logout,
+      refreshUser
+    }}>
       {children}
     </AdminContext.Provider>
   );

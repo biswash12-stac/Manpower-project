@@ -26,7 +26,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import ClientsSection from "@/components/ClientsSection";
 import DemandsSection from "@/components/DemandsSection";
-
 type Testimonial = {
   name: string;
   role: string;
@@ -53,19 +52,38 @@ export default function HomePage() {
     fetchFeaturedJobs();
   }, []);
 
-  const fetchFeaturedJobs = async () => {
-    try {
-      const res = await fetch('/api/v1/jobs/featured?limit=6');
-      const data = await res.json();
-      if (data.success) {
-        setFeaturedJobs(data.data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch jobs:', error);
-    } finally {
-      setLoading(false);
+const fetchFeaturedJobs = async () => {
+  try {
+    const res = await fetch('/api/v1/jobs/featured?limit=6');
+    
+    // ✅ Add this check to handle non-JSON responses
+    if (!res.ok) {
+      console.error('API returned status:', res.status);
+      setFeaturedJobs([]);
+      return;
     }
-  };
+    
+    // ✅ Check content type before parsing JSON
+    const contentType = res.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error('Expected JSON but got:', contentType);
+      setFeaturedJobs([]);
+      return;
+    }
+    
+    const data = await res.json();
+    if (data.success) {
+      setFeaturedJobs(data.data);
+    } else {
+      setFeaturedJobs([]);
+    }
+  } catch (error) {
+    console.error('Failed to fetch jobs:', error);
+    setFeaturedJobs([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const stats = [
     { icon: Users, value: "25+", label: "Years of Experience" },
@@ -529,7 +547,7 @@ export default function HomePage() {
       </section>
       
       <ClientsSection />
-      <DemandsSection />
+      <DemandsSection/>
     </div>
   );
 }

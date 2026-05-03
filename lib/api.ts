@@ -22,13 +22,14 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
     headers,
   });
   
-  // ✅ Fix: Check if response has content before parsing JSON
   const contentType = response.headers.get('content-type');
   let data = null;
   
   if (contentType && contentType.includes('application/json')) {
     data = await response.json();
   }
+  
+  console.log(`API Response [${endpoint}]:`, { status: response.status, data });
   
   if (!response.ok) {
     const isLoginEndpoint = endpoint === '/auth/login';
@@ -40,14 +41,18 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
       } else {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        localStorage.removeItem('adminUser');
-        window.location.href = '/auth/admin/login';
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auth/admin/login';
+        }
         throw new Error('Session expired');
       }
     }
-    throw new Error(data?.message || `API request failed: ${response.status}`);
+    
+    const errorMessage = data?.message || `API request failed: ${response.status}`;
+    throw new Error(errorMessage);
   }
   
+  // Return the full response including success flag and data
   return data;
 }
 
@@ -66,8 +71,10 @@ async function refreshToken(): Promise<boolean> {
     
     if (response.ok) {
       const data = await response.json();
-      localStorage.setItem('accessToken', data.data.accessToken);
-      return true;
+      if (data.success && data.data?.accessToken) {
+        localStorage.setItem('accessToken', data.data.accessToken);
+        return true;
+      }
     }
   } catch (error) {
     console.error('Token refresh failed:', error);

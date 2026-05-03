@@ -1,5 +1,5 @@
 import { MessageCircle } from "lucide-react";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 
 export function WhatsAppButton() {
   const whatsappNumber = "+96512345678"; // Replace with actual number

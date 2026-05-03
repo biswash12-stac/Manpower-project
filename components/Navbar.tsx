@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { Menu, X, ChevronDown, Globe } from "lucide-react";
+import { Menu, X, ChevronDown, Globe, FileText } from "lucide-react";
 import { Button } from "./ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 // 👉 Move logo to /public/images/logo.png
@@ -38,6 +38,11 @@ const Navbar: React.FC = () => {
     { name: "Visa & Emigration", path: "/services#visa" },
   ];
 
+  // Function to open PDF in new tab
+  const openCompanyProfile = () => {
+    window.open("/gulfempire.pdf", "_blank");
+  };
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -51,13 +56,13 @@ const Navbar: React.FC = () => {
           
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-          <Image 
-  src={logo} 
-  alt="gulfEmpire-Logo" 
-  className="h-16 w-auto" 
-  loading="eager"
-  priority
-/>
+            <Image 
+              src={logo} 
+              alt="gulfEmpire-Logo" 
+              className="h-16 w-auto" 
+              loading="eager"
+              priority
+            />
           </Link>
 
           {/* Desktop Navigation */}
@@ -134,15 +139,24 @@ const Navbar: React.FC = () => {
             </Link>
           </nav>
 
-          {/* CTA */}
-          <div className="hidden lg:flex items-center gap-4 text-black" >
+          {/* CTA - Desktop */}
+          <div className="hidden lg:flex items-center gap-4 text-black">
             <button className="flex items-center gap-2 text-muted-foreground hover:text-[#1A326D] transition-colors">
               <Globe className="w-4 h-4" />
               <span className="text-sm">EN</span>
             </button>
 
-            <Link href={`/jobs`}>
-              <Button className="bg-amber-500 hover:bg-amber-600 text-white">
+            {/* NEW: Company Profile Button */}
+            <button
+              onClick={openCompanyProfile}
+              className="flex items-center gap-2 px-3 py-2 border border-[#0A2463] text-[#0A2463] rounded-lg hover:bg-[#0A2463] hover:text-white transition-all bg-blue-800 text-white duration-200"
+            >
+              <FileText className="w-4 h-4" />
+              <span className="text-sm font-medium">Company Profile</span>
+            </button>
+
+            <Link href="/jobs">
+              <Button className="bg-red-500 rounded text-white hover:bg-red-600">
                 Apply Now
               </Button>
             </Link>
@@ -151,7 +165,7 @@ const Navbar: React.FC = () => {
           {/* Mobile Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden p-2 bg-slate-600"
+            className="lg:hidden p-2 bg-slate-600 rounded text-white"
           >
             {isMobileMenuOpen ? (
               <X className="w-6 h-6" />
@@ -169,7 +183,7 @@ const Navbar: React.FC = () => {
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="lg:hidden overflow-hidden  "
+              className="lg:hidden overflow-hidden text-slate-600"
             >
               <nav className="flex flex-col gap-4 pt-6 pb-4">
                 
@@ -207,14 +221,23 @@ const Navbar: React.FC = () => {
                   Contact
                 </Link>
 
-                <div className="flex items-center gap-4 pt-4 border-t border-border">
+                <div className="flex flex-col gap-4 pt-4 border-t border-border">
                   <button className="flex items-center gap-2 text-muted-foreground">
                     <Globe className="w-4 h-4" />
                     <span className="text-sm">EN</span>
                   </button>
 
-                  <Link href="/apply" className="flex-1">
-                    <Button className="w-full bg-[#D4AF37] text-white ">
+                  {/* NEW: Company Profile Button for Mobile */}
+                  <button
+                    onClick={openCompanyProfile}
+                    className="flex items-center justify-center gap-2 px-4 py-2 border border-[#0A2463] text-[#0A2463] rounded-lg hover:bg-[#0A2463] hover:text-white transition-all duration-200"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span className="text-sm font-medium">Company Profile</span>
+                  </button>
+
+                  <Link href="/jobs" className="w-full">
+                    <Button className="w-full bg-red-500 text-white hover:bg-red-600">
                       Apply Now
                     </Button>
                   </Link>

@@ -256,7 +256,7 @@ export default function JobsPage() {
 
                         <Button
                           // variant="outline"
-                          className="w-full border-[#1A326D] text-white hover:bg-gray-800 rounded"
+                          className="w-full border-[#1A326D] bg-emerald-500 text-white rounded"
                         >
                           Save Job
                         </Button>

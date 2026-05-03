@@ -45,6 +45,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { icon: FileText, label: "Applications", path: "/admin/applications", badge: null },
     { icon: MessageSquare, label: "Contacts", path: "/admin/contacts", badge: null },
     { icon: Users, label: "Candidates", path: "/admin/candidates", badge: null },
+    { icon: FileText, label: "Demands", path: "/admin/Demand", badge: null },
     { icon: Settings, label: "Settings", path: "/admin/settings", badge: null },
   ];
 

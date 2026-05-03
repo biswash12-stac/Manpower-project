@@ -124,7 +124,6 @@ export default function ApplyPage() {
 
       case 2:
         if (!formData.position.trim()) newErrors.position = "Position is required";
-        // ✅ Fixed: Only validate experience if NOT fresher
         if (!formData.isFresher && !formData.experience.trim()) {
           newErrors.experience = "Years of experience is required";
         }
@@ -140,11 +139,17 @@ export default function ApplyPage() {
         break;
 
       case 4:
-        const hasEducation = education.some(
-          (edu) => edu.qualification.trim() !== ""
+        // ✅ FIXED: Requires at least ONE COMPLETE education entry (all 3 fields filled)
+        const hasAtLeastOneComplete = education.some(
+          (edu) =>
+            edu.qualification.trim() !== "" &&
+            edu.institution.trim() !== "" &&
+            edu.year.trim() !== ""
         );
-        if (!hasEducation)
-          newErrors.education = "Please add at least one education entry";
+
+        if (!hasAtLeastOneComplete) {
+          newErrors.education = "Please fill at least one COMPLETE education entry (Qualification, Institution, and Year are all required)";
+        }
         break;
     }
 
@@ -159,94 +164,78 @@ export default function ApplyPage() {
     clearFieldError(e.target.name);
   };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
+    setPhotoName(file.name);
+    clearFieldError("photo");
 
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPhotoPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
 
+    const uploadFormData = new FormData();
+    uploadFormData.append('file', file);
+    uploadFormData.append('type', 'photo');
 
-const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  
-  setPhotoName(file.name);
-  clearFieldError("photo");
-  
-  // Preview for UI only
-  const reader = new FileReader();
-  reader.onloadend = () => {
-    setPhotoPreview(reader.result as string);
-  };
-  reader.readAsDataURL(file);
-  
-  // Upload separately
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('type', 'photo');
-  
-  try {
-    const response = await fetch('/api/v1/uploads', {
-      method: 'POST',
-      body: formData,
-    });
-    
-    const result = await response.json();
-    if (result.success) {
-      console.log('Photo uploaded:', result.url);
-      setPhotoUrl(result.url);
-      toast.success("Photo uploaded successfully");
+    try {
+      const response = await fetch('/api/v1/uploads', {
+        method: 'POST',
+        body: uploadFormData,
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        console.log('Photo uploaded:', result.url);
+        setPhotoUrl(result.url);
+        toast.success("Photo uploaded successfully");
+      }
+    } catch (error) {
+      console.error('Photo upload failed:', error);
+      toast.error("Failed to upload photo");
+      setPhotoName("");
     }
-  } catch (error) {
-    console.error('Photo upload failed:', error);
-    toast.error("Failed to upload photo");
-    setPhotoName("");
-  }
-};
+  };
 
   const handlePassportUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  
-  setPassportName(file.name);
-  clearFieldError("passport");
-  
-  // ✅ Don't create preview for passport - just upload
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('type', 'passport');
-  
-  try {
-    console.log("Uploading passport...", file.name);
-    
-    const response = await fetch('/api/v1/uploads', {
-      method: 'POST',
-      body: formData,
-      // ✅ Don't set Content-Type header - let browser set it with boundary
-    });
-    
-    console.log("Response status:", response.status);
-    
-    if (!response.ok) {
-      throw new Error(`Upload failed with status ${response.status}`);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPassportName(file.name);
+    clearFieldError("passport");
+
+    const uploadFormData = new FormData();
+    uploadFormData.append('file', file);
+    uploadFormData.append('type', 'passport');
+
+    try {
+      const response = await fetch('/api/v1/uploads', {
+        method: 'POST',
+        body: uploadFormData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed with status ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('Passport uploaded:', result.url);
+        setPassportUrl(result.url);
+        toast.success("Passport uploaded successfully");
+      } else {
+        throw new Error(result.error || "Upload failed");
+      }
+    } catch (error) {
+      console.error('Passport upload failed:', error);
+      toast.error("Failed to upload passport. Please try again.");
+      setPassportName("");
     }
-    
-    const result = await response.json();
-    console.log("Upload result:", result);
-    
-    if (result.success) {
-      console.log('Passport uploaded:', result.url);
-      setPassportUrl(result.url);
-      toast.success("Passport uploaded successfully");
-    } else {
-      throw new Error(result.error || "Upload failed");
-    }
-  } catch (error) {
-    console.error('Passport upload failed:', error);
-    toast.error("Failed to upload passport. Please try again.");
-    setPassportName(""); // Clear the filename on error
-  }
-};
-
-
-
+  };
 
   const handleCertificatesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -256,14 +245,14 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedUrls: string[] = [];
 
     for (const file of files) {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', 'certificates');
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', file);
+      uploadFormData.append('type', 'certificates');
 
       try {
         const response = await fetch('/api/v1/uploads', {
           method: 'POST',
-          body: formData,
+          body: uploadFormData,
         });
         const result = await response.json();
         if (result.success) {
@@ -278,12 +267,65 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     console.log('Certificates uploaded:', uploadedUrls);
   };
 
-  // ✅ FIXED: Proper handleSubmit that actually sends data
+  const handleCvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
+    const uploadFormData = new FormData();
+    uploadFormData.append('file', file);
+    uploadFormData.append('type', 'cv');
+
+    try {
+      const response = await fetch('/api/v1/uploads', {
+        method: 'POST',
+        body: uploadFormData,
+      });
+      const result = await response.json();
+      if (result.success) {
+        setCvUrl(result.url);
+        toast.success("CV uploaded successfully");
+      } else {
+        toast.error("Failed to upload CV");
+      }
+    } catch (error) {
+      console.error('CV upload failed:', error);
+      toast.error("Failed to upload CV");
+    }
+  };
 
   const handleSubmit = async () => {
+    console.log("=== HANDLE SUBMIT CALLED ===");
+    console.log("Raw education state:", education);
+
     if (!jobId) {
       toast.error("Invalid job. Please try again.");
+      return;
+    }
+
+    // ✅ FIXED: Filter using OR - keep any education entry that has at least one field filled
+    const filteredEducation = education.filter(
+      (edu) =>
+        edu.qualification.trim() !== "" ||
+        edu.institution.trim() !== "" ||
+        edu.year.trim() !== ""
+    );
+
+    // ✅ FIXED: Add proper type annotation for filteredEmployment
+    let filteredEmployment: EmploymentItem[] = [];
+    if (!formData.isFresher) {
+      filteredEmployment = employment.filter(
+        (job) => job.company.trim() !== "" || job.position.trim() !== "" || job.years.trim() !== ""
+      );
+    }
+
+    console.log("Filtered education:", filteredEducation);
+    console.log("Filtered employment:", filteredEmployment);
+
+    // Validate at least one education entry exists
+    if (filteredEducation.length === 0) {
+      toast.error("Please add your education details", {
+        description: "Fill in at least one education entry",
+      });
       return;
     }
 
@@ -294,14 +336,14 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       email: formData.email,
       phone: formData.phone,
       country: formData.country,
-      city: formData.city,
+      city: formData.city || "",
       position: formData.position,
       experience: formData.isFresher ? 0 : (parseInt(formData.experience) || 0),
-      skills: formData.skills ? formData.skills.split(",").map(s => s.trim()) : [],
+      skills: formData.skills ? formData.skills.split(",").map(s => s.trim()).filter(s => s !== "") : [],
       coverLetter: formData.coverLetter,
       isFresher: formData.isFresher,
-      education: education,
-      employment: employment,
+      education: filteredEducation,
+      employment: filteredEmployment,
       documents: {
         photoUrl: photoUrl,
         passportUrl: passportUrl,
@@ -310,7 +352,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       },
     };
 
-    console.log("Submitting application with documents:", applicationData);
+    console.log("Submitting application data:", applicationData);
 
     try {
       const response = await fetch("/api/v1/applications", {
@@ -332,11 +374,17 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
           window.location.href = "/jobs";
         }, 2000);
       } else {
-        toast.error(result.message || "Failed to submit application");
+        console.error("Server error:", result);
+        toast.error(result.message || "Failed to submit application", {
+          description: result.error || "Please try again or contact support",
+          duration: 5000,
+        });
       }
     } catch (error) {
       console.error("Submission error:", error);
-      toast.error("Something went wrong");
+      toast.error("Something went wrong", {
+        description: "Network error. Please check your connection and try again.",
+      });
     }
   };
 
@@ -554,7 +602,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 
                   <Textarea
                     name="skills"
-                    placeholder="Skills"
+                    placeholder="Skills (comma separated)"
                     value={formData.skills}
                     onChange={handleChange}
                     rows={3}
@@ -687,7 +735,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                       <p className="text-red-500 text-xs">{errors.certificates}</p>
                     )}
                   </div>
-                  {/* to fix here cv  */}
+
                   <div>
                     <Label className="text-gray-700 font-medium">
                       CV (Optional)
@@ -696,20 +744,21 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                       {cvUrl ? (
                         <div className="text-center">
                           <FileText className="w-8 h-8 text-[#19316C] mx-auto mb-1" />
-                          <p className="text-sm text-gray-700">{cvUrl}</p>
+                          <p className="text-sm text-gray-700">CV uploaded ✓</p>
+                          <p className="text-xs text-gray-400">Click to change</p>
                         </div>
                       ) : (
                         <div className="text-center">
                           <Upload className="w-8 h-8 text-gray-400 mx-auto mb-1" />
-                          <p className="text-sm text-gray-500">Upload CV</p>
+                          <p className="text-sm text-gray-500">Upload CV (PDF/DOC)</p>
+                          <p className="text-xs text-gray-400">Max 5MB</p>
                         </div>
                       )}
                       <input
                         type="file"
                         className="hidden"
-                        onChange={(e) =>
-                          setCvUrl(e.target.files?.[0]?.name || "")
-                        }
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleCvUpload}
                       />
                     </label>
                   </div>
@@ -722,16 +771,19 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                   <h2 className="text-2xl font-bold text-[#19316C] mb-4">
                     Education Details
                   </h2>
+                  <p className="text-sm text-gray-500 mb-2">
+                    Please add your educational qualifications
+                  </p>
                   {errors.education && (
                     <p className="text-red-500 text-sm">{errors.education}</p>
                   )}
                   {education.map((edu, index) => (
                     <div
                       key={index}
-                      className="space-y-3 p-4 bg-gray-50 rounded-lg mb-4"
+                      className="space-y-3 p-4 bg-gray-50 rounded-lg mb-4 border border-gray-200"
                     >
                       <Input
-                        placeholder="Qualification"
+                        placeholder="Qualification * (e.g., Bachelor's in Computer Science)"
                         value={edu.qualification}
                         onChange={(e) =>
                           updateEducation(
@@ -743,7 +795,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                         className="text-black placeholder:text-gray-400"
                       />
                       <Input
-                        placeholder="Institution"
+                        placeholder="Institution * (e.g., Kathmandu University)"
                         value={edu.institution}
                         onChange={(e) =>
                           updateEducation(
@@ -755,7 +807,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                         className="text-black placeholder:text-gray-400"
                       />
                       <Input
-                        placeholder="Year"
+                        placeholder="Year * (e.g., 2020)"
                         value={edu.year}
                         onChange={(e) =>
                           updateEducation(index, "year", e.target.value)
@@ -766,8 +818,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                   ))}
                   <Button
                     onClick={addEducation}
-                    // variant="outline"
-                    className="w-full"
+                    className="w-full bg-[#193cb8] text-white font-bold"
                   >
                     + Add More Education
                   </Button>
@@ -794,28 +845,28 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                   ) : (
                     <>
                       {employment.map((job, index) => (
-                        <div key={index} className="space-y-3 p-4 bg-gray-50 rounded-lg mb-4">
+                        <div key={index} className="space-y-3 p-4 bg-gray-50 rounded-lg mb-4 border border-gray-200">
                           <Input
-                            placeholder="Company"
+                            placeholder="Company Name"
                             value={job.company}
                             onChange={(e) => updateEmployment(index, "company", e.target.value)}
                             className="text-black placeholder:text-gray-400"
                           />
                           <Input
-                            placeholder="Position"
+                            placeholder="Position / Role"
                             value={job.position}
                             onChange={(e) => updateEmployment(index, "position", e.target.value)}
                             className="text-black placeholder:text-gray-400"
                           />
                           <Input
-                            placeholder="Years"
+                            placeholder="Years Worked (e.g., 2 years)"
                             value={job.years}
                             onChange={(e) => updateEmployment(index, "years", e.target.value)}
                             className="text-black placeholder:text-gray-400"
                           />
                         </div>
                       ))}
-                      <Button onClick={addEmployment}  className="w-full rounded">
+                      <Button onClick={addEmployment} className="w-full bg-[#193cb8] text-white font-bold rounded">
                         + Add More Employment
                       </Button>
                     </>
@@ -826,6 +877,12 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
               {/* STEP 6: Preview */}
               {step === 6 && (
                 <div id="pdf-content" className="space-y-4">
+                  <div className="bg-blue-50 p-3 rounded-lg mb-4">
+                    <p className="text-sm text-blue-700">
+                      📋 Please review your information before submitting
+                    </p>
+                  </div>
+
                   {/* QR at LEFT, Photo at RIGHT */}
                   <div className="flex justify-between items-start">
                     <div>
@@ -915,23 +972,39 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                           <th className="border p-2 text-slate-600">Year</th>
                         </tr>
                       </thead>
+                      {/* ✅ FIXED: Preview table shows only non-empty education entries */}
                       <tbody>
-                        {education.map((edu, i) => (
-                          <tr key={i}>
-                            <td className="border p-2 text-black">
-                              {edu.qualification || "-"}
+                        {education
+                          .filter(
+                            (edu) =>
+                              edu.qualification.trim() ||
+                              edu.institution.trim() ||
+                              edu.year.trim()
+                          )
+                          .map((edu, i) => (
+                            <tr key={i}>
+                              <td className="border p-2 text-black">
+                                {edu.qualification || "-"}
+                              </td>
+                              <td className="border p-2 text-black">
+                                {edu.institution || "-"}
+                              </td>
+                              <td className="border p-2 text-black">
+                                {edu.year || "-"}
+                              </td>
+                            </tr>
+                          ))}
+                        {education.filter(edu => edu.qualification || edu.institution || edu.year).length === 0 && (
+                          <tr>
+                            <td colSpan={3} className="border p-4 text-center text-gray-500">
+                              No education details provided
                             </td>
-                            <td className="border p-2 text-black">
-                              {edu.institution || "-"}
-                            </td>
-                            <td className="border p-2 text-black">{edu.year || "-"}</td>
                           </tr>
-                        ))}
+                        )}
                       </tbody>
                     </table>
                   </div>
 
-                  {/* ✅ ONLY show Employment History if NOT Fresher */}
                   {formData.isFresher === false && (
                     <>
                       <h3 className="font-semibold text-red-600">
@@ -947,17 +1020,33 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                             </tr>
                           </thead>
                           <tbody>
-                            {employment.map((job, i) => (
-                              <tr key={i}>
-                                <td className="border p-2 text-black">
-                                  {job.company || "-"}
+                            {employment
+                              .filter(
+                                (job) =>
+                                  job.company.trim() ||
+                                  job.position.trim() ||
+                                  job.years.trim()
+                              )
+                              .map((job, i) => (
+                                <tr key={i}>
+                                  <td className="border p-2 text-black">
+                                    {job.company || "-"}
+                                  </td>
+                                  <td className="border p-2 text-black">
+                                    {job.position || "-"}
+                                  </td>
+                                  <td className="border p-2 text-black">
+                                    {job.years || "-"}
+                                  </td>
+                                </tr>
+                              ))}
+                            {employment.filter(job => job.company || job.position || job.years).length === 0 && (
+                              <tr>
+                                <td colSpan={3} className="border p-4 text-center text-gray-500">
+                                  No employment history provided
                                 </td>
-                                <td className="border p-2 text-black">
-                                  {job.position || "-"}
-                                </td>
-                                <td className="border p-2 text-black">{job.years || "-"}</td>
                               </tr>
-                            ))}
+                            )}
                           </tbody>
                         </table>
                       </div>
@@ -993,14 +1082,14 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                 <Button
                   onClick={prevStep}
                   disabled={step === 1}
-                  className="rounded bg-blue-500 text-white hover:bg-blue-600"
+                  className="rounded bg-[#193cb8] text-white font-bold"
                 >
                   Previous
                 </Button>
                 {step < totalSteps ? (
                   <Button
                     onClick={nextStep}
-                    className="rounded"
+                    className="rounded bg-red-600 text-white"
                   >
                     {step === 5 ? "Preview" : "Next"}
                   </Button>
